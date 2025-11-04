@@ -1,0 +1,141 @@
+model Appointement {
+  id            Int            @id @default(autoincrement())
+  date          DateTime
+  subject       String         @db.VarChar(255)
+  description   String
+  is_canceled   Boolean        @default(false)
+  perscriptions Perscription[]
+  invoice       Invoice?
+  doctor_id     Int
+  patient_id    Int
+  clinic_id     Int
+
+  doctor  User   @relation("doctor_appointements", fields: [doctor_id], references: [id])
+  patient User   @relation("patient_appointements", fields: [patient_id], references: [id])
+  clinic  Clinic @relation(fields: [clinic_id], references: [id])
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+model Clinic {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  rooms_number    Int
+  receptionist_id Int?             @unique
+  services        ClinicServices[]
+  appointements   Appointement[]
+  users           User[]
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+model ClinicServices {
+  id         Int @id @default(autoincrement())
+  clinic_id  Int
+  service_id Int
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  clinic  Clinic  @relation(fields: [clinic_id], references: [id])
+  service Service @relation(fields: [service_id], references: [id])
+
+  @@unique([clinic_id, service_id])
+}
+
+model Invoice {
+  id              Int    @id @default(autoincrement())
+  price           Int
+  discount        Int    @default(0)
+  text            String
+  appointement_id Int    @unique
+
+  appointment Appointement @relation(fields: [appointement_id], references: [id])
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+model Perscription {
+  id              Int    @id @default(autoincrement())
+  title           String @db.VarChar(255)
+  description     String
+  appointement_id Int
+
+  appointement Appointement @relation(fields: [appointement_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+model Role {
+  id         Int      @id @default(autoincrement())
+  name       RoleEnum @default(PATIENT)
+  users      User[]
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+enum RoleEnum {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+  PATIENT
+}
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id          Int              @id @default(autoincrement())
+  name        String           @db.VarChar(255)
+  description String
+  cost        Int
+  clinics     ClinicServices[]
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  picture      String     @db.VarChar(255)
+  firstname    String     @db.VarChar(255)
+  lastname     String     @db.VarChar(255)
+  email        String     @unique @db.VarChar(255)
+  gender       GenderEnum @default(MALE)
+  password     String     @db.VarChar(255)
+  access_token String     @db.VarChar(255)
+  phone_number String     @db.VarChar(12)
+  role_id      Int
+  clinic_id    Int?
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  appointement_as_doctor  Appointement[] @relation("doctor_appointements")
+  appointement_as_patient Appointement[] @relation("patient_appointements")
+  clinic                  Clinic?        @relation(fields: [clinic_id], references: [id])
+
+  role Role @relation(fields: [role_id], references: [id])
+}
+
+enum GenderEnum {
+  MALE
+  FEMALE
+}

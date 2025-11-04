@@ -1,0 +1,14 @@
+model Role {
+  id         Int      @id @default(autoincrement())
+  name       RoleEnum @default(PATIENT)
+  users      User[]
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}
+
+enum RoleEnum {
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+  PATIENT
+}

@@ -1,0 +1,12 @@
+model Clinic {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  rooms_number    Int
+  receptionist_id Int?             @unique
+  services        ClinicServices[]
+  appointements   Appointement[]
+  users           User[]
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+}

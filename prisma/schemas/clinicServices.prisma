@@ -1,0 +1,13 @@
+model ClinicServices {
+  id         Int @id @default(autoincrement())
+  clinic_id  Int
+  service_id Int
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  clinic  Clinic  @relation(fields: [clinic_id], references: [id])
+  service Service @relation(fields: [service_id], references: [id])
+
+  @@unique([clinic_id, service_id])
+}
