@@ -4,20 +4,20 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { ClinicModule } from './modules/clinic/clinic.module';
-import { AppointementModule } from './modules/appointment/appointement.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
 import { ServiceModule } from './modules/service/service.module';
-import { PerscriptionModule } from './modules/perscription/perscription.module';
+import { AppointmentModule } from './modules/appointment/appointement.module';
+import { PrescriptionModule } from './modules/perscription/prescription.module';
 
 @Module({
   imports: [
     AuthModule,
     UserModule,
     ClinicModule,
-    AppointementModule,
+    AppointmentModule,
     InvoiceModule,
     ServiceModule,
-    PerscriptionModule,
+    PrescriptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
