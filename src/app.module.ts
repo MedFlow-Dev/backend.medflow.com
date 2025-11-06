@@ -8,6 +8,8 @@ import { InvoiceModule } from './modules/invoice/invoice.module';
 import { ServiceModule } from './modules/service/service.module';
 import { AppointmentModule } from './modules/appointment/appointement.module';
 import { PrescriptionModule } from './modules/perscription/prescription.module';
+import { RoleModule } from './modules/role/role.module';
+import { PrismaModule } from './modules/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { PrescriptionModule } from './modules/perscription/prescription.module';
     InvoiceModule,
     ServiceModule,
     PrescriptionModule,
+    RoleModule,
+    PrismaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
