@@ -1,0 +1,29 @@
+model User {
+  id               Int        @id @default(autoincrement())
+  picture          String     @db.VarChar(255)
+  firstname        String     @db.VarChar(255)
+  lastname         String     @db.VarChar(255)
+  email            String     @unique @db.VarChar(255)
+  gender           GenderEnum @default(MALE)
+  password         String     @db.VarChar(255)
+  access_token     String     @db.VarChar(255)
+  phone_number     String     @db.VarChar(12)
+  doctor_specially String?
+
+  role_id   Int
+  clinic_id Int?
+
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)
+
+  appointement_as_doctor  Appointement[] @relation("doctor_appointements")
+  appointement_as_patient Appointement[] @relation("patient_appointements")
+  clinic                  Clinic?        @relation(fields: [clinic_id], references: [id])
+
+  role Role @relation(fields: [role_id], references: [id])
+}
+
+enum GenderEnum {
+  MALE
+  FEMALE
+}
