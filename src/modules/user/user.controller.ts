@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 
@@ -11,7 +11,10 @@ export class UserController {
     const result = await this._userService.createUser(createUserDto);
 
     if (!result.success) {
-
+      throw new BadRequestException(result.error);
     }
+    return {
+      message: 'User registered successfully.',
+    };
   }
 }

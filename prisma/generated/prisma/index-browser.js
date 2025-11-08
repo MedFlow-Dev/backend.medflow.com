@@ -120,9 +120,123 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AppointementScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  subject: 'subject',
+  description: 'description',
+  is_canceled: 'is_canceled',
+  doctor_id: 'doctor_id',
+  patient_id: 'patient_id',
+  clinic_id: 'clinic_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ClinicScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  rooms_number: 'rooms_number',
+  receptionist_id: 'receptionist_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ClinicServicesScalarFieldEnum = {
+  id: 'id',
+  clinic_id: 'clinic_id',
+  service_id: 'service_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  price: 'price',
+  discount: 'discount',
+  text: 'text',
+  appointement_id: 'appointement_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PerscriptionScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  appointement_id: 'appointement_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.RoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ServiceScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  cost: 'cost',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  picture: 'picture',
+  firstname: 'firstname',
+  lastname: 'lastname',
+  email: 'email',
+  gender: 'gender',
+  password: 'password',
+  access_token: 'access_token',
+  phone_number: 'phone_number',
+  doctor_speciality: 'doctor_speciality',
+  role_id: 'role_id',
+  clinic_id: 'clinic_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.RoleEnum = exports.$Enums.RoleEnum = {
+  ADMIN: 'ADMIN',
+  DOCTOR: 'DOCTOR',
+  RECEPTIONIST: 'RECEPTIONIST',
+  PATIENT: 'PATIENT'
+};
+
+exports.GenderEnum = exports.$Enums.GenderEnum = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
+};
 
 exports.Prisma.ModelName = {
-
+  Appointement: 'Appointement',
+  Clinic: 'Clinic',
+  ClinicServices: 'ClinicServices',
+  Invoice: 'Invoice',
+  Perscription: 'Perscription',
+  Role: 'Role',
+  Service: 'Service',
+  User: 'User'
 };
 
 /**

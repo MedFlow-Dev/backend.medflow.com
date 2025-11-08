@@ -92,9 +92,123 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
   Serializable: 'Serializable'
 });
 
+exports.Prisma.AppointementScalarFieldEnum = {
+  id: 'id',
+  date: 'date',
+  subject: 'subject',
+  description: 'description',
+  is_canceled: 'is_canceled',
+  doctor_id: 'doctor_id',
+  patient_id: 'patient_id',
+  clinic_id: 'clinic_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ClinicScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  rooms_number: 'rooms_number',
+  receptionist_id: 'receptionist_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ClinicServicesScalarFieldEnum = {
+  id: 'id',
+  clinic_id: 'clinic_id',
+  service_id: 'service_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  price: 'price',
+  discount: 'discount',
+  text: 'text',
+  appointement_id: 'appointement_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.PerscriptionScalarFieldEnum = {
+  id: 'id',
+  title: 'title',
+  description: 'description',
+  appointement_id: 'appointement_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.RoleScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.ServiceScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  cost: 'cost',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  picture: 'picture',
+  firstname: 'firstname',
+  lastname: 'lastname',
+  email: 'email',
+  gender: 'gender',
+  password: 'password',
+  access_token: 'access_token',
+  phone_number: 'phone_number',
+  doctor_speciality: 'doctor_speciality',
+  role_id: 'role_id',
+  clinic_id: 'clinic_id',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+};
+
+exports.Prisma.SortOrder = {
+  asc: 'asc',
+  desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+exports.RoleEnum = exports.$Enums.RoleEnum = {
+  ADMIN: 'ADMIN',
+  DOCTOR: 'DOCTOR',
+  RECEPTIONIST: 'RECEPTIONIST',
+  PATIENT: 'PATIENT'
+};
+
+exports.GenderEnum = exports.$Enums.GenderEnum = {
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
+};
 
 exports.Prisma.ModelName = {
-
+  Appointement: 'Appointement',
+  Clinic: 'Clinic',
+  ClinicServices: 'ClinicServices',
+  Invoice: 'Invoice',
+  Perscription: 'Perscription',
+  Role: 'Role',
+  Service: 'Service',
+  User: 'User'
 };
 /**
  * Create the Client
@@ -144,13 +258,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n",
-  "inlineSchemaHash": "99605b976d14dee99c394828b1c2a62deafc51a4fda3251761a240d4cc88e515",
+  "inlineSchema": "model Appointement {\n  id            Int            @id @default(autoincrement())\n  date          DateTime\n  subject       String         @db.VarChar(255)\n  description   String\n  is_canceled   Boolean        @default(false)\n  perscriptions Perscription[]\n  invoice       Invoice?\n  doctor_id     Int\n  patient_id    Int\n  clinic_id     Int\n\n  doctor  User   @relation(\"doctor_appointements\", fields: [doctor_id], references: [id])\n  patient User   @relation(\"patient_appointements\", fields: [patient_id], references: [id])\n  clinic  Clinic @relation(fields: [clinic_id], references: [id])\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nmodel Clinic {\n  id              Int              @id @default(autoincrement())\n  name            String           @db.VarChar(255)\n  rooms_number    Int\n  receptionist_id Int?             @unique\n  services        ClinicServices[]\n  appointements   Appointement[]\n  users           User[]\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nmodel ClinicServices {\n  id         Int @id @default(autoincrement())\n  clinic_id  Int\n  service_id Int\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n\n  clinic  Clinic  @relation(fields: [clinic_id], references: [id])\n  service Service @relation(fields: [service_id], references: [id])\n\n  @@unique([clinic_id, service_id])\n}\n\nmodel Invoice {\n  id              Int    @id @default(autoincrement())\n  price           Int\n  discount        Int    @default(0)\n  text            String\n  appointement_id Int    @unique\n\n  appointment Appointement @relation(fields: [appointement_id], references: [id])\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nmodel Perscription {\n  id              Int    @id @default(autoincrement())\n  title           String @db.VarChar(255)\n  description     String\n  appointement_id Int\n\n  appointement Appointement @relation(fields: [appointement_id], references: [id], onDelete: Cascade, onUpdate: Cascade)\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nmodel Role {\n  id         Int      @id @default(autoincrement())\n  name       RoleEnum @default(PATIENT)\n  users      User[]\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nenum RoleEnum {\n  ADMIN\n  DOCTOR\n  RECEPTIONIST\n  PATIENT\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Service {\n  id          Int              @id @default(autoincrement())\n  name        String           @db.VarChar(255)\n  description String\n  cost        Int\n  clinics     ClinicServices[]\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n}\n\nmodel User {\n  id                Int        @id @default(autoincrement())\n  picture           String?    @db.VarChar(255)\n  firstname         String     @db.VarChar(255)\n  lastname          String     @db.VarChar(255)\n  email             String     @unique @db.VarChar(255)\n  gender            GenderEnum @default(MALE)\n  password          String     @db.VarChar(255)\n  access_token      String     @db.VarChar(255)\n  phone_number      String?    @db.VarChar(12)\n  doctor_speciality String?\n\n  role_id   Int\n  clinic_id Int?\n\n  created_at DateTime @default(now()) @db.Timestamp(0)\n  updated_at DateTime @default(now()) @updatedAt @db.Timestamp(0)\n\n  appointement_as_doctor  Appointement[] @relation(\"doctor_appointements\")\n  appointement_as_patient Appointement[] @relation(\"patient_appointements\")\n  clinic                  Clinic?        @relation(fields: [clinic_id], references: [id])\n\n  role Role @relation(fields: [role_id], references: [id])\n}\n\nenum GenderEnum {\n  MALE\n  FEMALE\n}\n",
+  "inlineSchemaHash": "8742e810ca65e9ac3b1802978d3d65ef809c409501524fd4cdff85a4f3d5c52a",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"Appointement\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"date\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"subject\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"is_canceled\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"perscriptions\",\"kind\":\"object\",\"type\":\"Perscription\",\"relationName\":\"AppointementToPerscription\"},{\"name\":\"invoice\",\"kind\":\"object\",\"type\":\"Invoice\",\"relationName\":\"AppointementToInvoice\"},{\"name\":\"doctor_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"patient_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"clinic_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"doctor\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"doctor_appointements\"},{\"name\":\"patient\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"patient_appointements\"},{\"name\":\"clinic\",\"kind\":\"object\",\"type\":\"Clinic\",\"relationName\":\"AppointementToClinic\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Clinic\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"rooms_number\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"receptionist_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"services\",\"kind\":\"object\",\"type\":\"ClinicServices\",\"relationName\":\"ClinicToClinicServices\"},{\"name\":\"appointements\",\"kind\":\"object\",\"type\":\"Appointement\",\"relationName\":\"AppointementToClinic\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"ClinicToUser\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"ClinicServices\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"clinic_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"service_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"clinic\",\"kind\":\"object\",\"type\":\"Clinic\",\"relationName\":\"ClinicToClinicServices\"},{\"name\":\"service\",\"kind\":\"object\",\"type\":\"Service\",\"relationName\":\"ClinicServicesToService\"}],\"dbName\":null},\"Invoice\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"price\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"discount\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"text\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"appointement_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"appointment\",\"kind\":\"object\",\"type\":\"Appointement\",\"relationName\":\"AppointementToInvoice\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Perscription\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"title\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"appointement_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"appointement\",\"kind\":\"object\",\"type\":\"Appointement\",\"relationName\":\"AppointementToPerscription\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Role\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"enum\",\"type\":\"RoleEnum\"},{\"name\":\"users\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"RoleToUser\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"Service\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"description\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"cost\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"clinics\",\"kind\":\"object\",\"type\":\"ClinicServices\",\"relationName\":\"ClinicServicesToService\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"picture\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"firstname\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"lastname\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"gender\",\"kind\":\"enum\",\"type\":\"GenderEnum\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"access_token\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"phone_number\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"doctor_speciality\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"role_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"clinic_id\",\"kind\":\"scalar\",\"type\":\"Int\"},{\"name\":\"created_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updated_at\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"appointement_as_doctor\",\"kind\":\"object\",\"type\":\"Appointement\",\"relationName\":\"doctor_appointements\"},{\"name\":\"appointement_as_patient\",\"kind\":\"object\",\"type\":\"Appointement\",\"relationName\":\"patient_appointements\"},{\"name\":\"clinic\",\"kind\":\"object\",\"type\":\"Clinic\",\"relationName\":\"ClinicToUser\"},{\"name\":\"role\",\"kind\":\"object\",\"type\":\"Role\",\"relationName\":\"RoleToUser\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

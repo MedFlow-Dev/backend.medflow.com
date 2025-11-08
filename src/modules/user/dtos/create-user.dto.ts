@@ -6,6 +6,7 @@ import {
   IsString,
 } from 'class-validator';
 import { GenderEnum } from '../../../common/enums/gender.enum';
+import { RoleEnum } from '../../../common/enums/role.enum';
 
 export class CreateUserDto {
   @IsString()
@@ -21,9 +22,24 @@ export class CreateUserDto {
   email: string;
 
   @IsOptional()
-  doctor_speciality: string;
+  @IsString()
+  picture?: string;
+
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
+
+  @IsOptional()
+  doctor_speciality?: string;
 
   @IsNotEmpty()
   @IsEnum(GenderEnum)
   gender: GenderEnum;
+
+  @IsNotEmpty()
+  @IsEnum(RoleEnum)
+  role: RoleEnum;
+
+  @IsNotEmpty()
+  password: string;
 }
