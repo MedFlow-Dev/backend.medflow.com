@@ -10,9 +10,15 @@ import { AppointmentModule } from './modules/appointment/appointement.module';
 import { PrescriptionModule } from './modules/perscription/prescription.module';
 import { RoleModule } from './modules/role/role.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
+import config from './config/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [config],
+    }),
     AuthModule,
     UserModule,
     ClinicModule,
