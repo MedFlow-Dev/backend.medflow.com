@@ -23,7 +23,7 @@ export class ServiceController {
   constructor(private readonly _serviceService: ServiceService) {}
 
   @Post()
-  @Roles(RoleEnum.ADMIN )
+  @Roles(RoleEnum.ADMIN)
   async createService(@Body() body: CreateServiceDto) {
     const result = await this._serviceService.createService(body);
 
@@ -37,6 +37,7 @@ export class ServiceController {
   }
 
   @Get()
+  @Roles(RoleEnum.ADMIN)
   async getAllServices(
     @Query('page') page = '1',
     @Query('limit') limit = '10',
@@ -57,17 +58,25 @@ export class ServiceController {
   }
 
   @Get(':id')
+  @Roles(RoleEnum.ADMIN)
   async getServiceById(@Param('id') id: number) {
     return await this._serviceService.getServiceById(id);
   }
 
   @Put(':id')
+  @Roles(RoleEnum.ADMIN)
   async updateService(@Param('id') id: number, @Body() body: UpdateServiceDto) {
     return this._serviceService.updateService(id, body);
   }
 
   @Delete(':id')
+  @Roles(RoleEnum.ADMIN)
   async deleteService(@Param() id: number) {
     return await this._serviceService.deleteService(id);
   }
+
+
+  // TODO: Assign service to a clinic
+  // TODO: Get all services assigned to a clinic
+  // TODO: Get all services assigned to a doctor
 }

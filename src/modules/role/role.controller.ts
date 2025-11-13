@@ -34,6 +34,7 @@ export class RoleController {
   }
 
   @Get()
+  @Roles(RoleEnum.ADMIN)
   async getRoles(
     @Query('skip') skip?: string,
     @Query('take') take?: string,
@@ -55,6 +56,7 @@ export class RoleController {
   }
 
   @Put(':id')
+  @Roles(RoleEnum.ADMIN)
   async updateRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,
@@ -66,6 +68,7 @@ export class RoleController {
   }
 
   @Delete(':id')
+  @Roles(RoleEnum.ADMIN)
   async deleteRole(@Param('id', ParseIntPipe) id: number) {
     return await this._roleService.deleteRole({ id });
   }

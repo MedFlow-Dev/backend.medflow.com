@@ -12,6 +12,8 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../../common/enums/role.enum';
 
 @Controller('user')
 export class UserController {
@@ -30,6 +32,7 @@ export class UserController {
   }
 
   @Get()
+  @Roles(RoleEnum.ADMIN)
   async getAllUsers(
     @Query('page') page = '1',
     @Query('limit') limit = '10',
@@ -51,17 +54,20 @@ export class UserController {
     );
   }
 
+  @Roles(RoleEnum.ADMIN)
   @Get(':id')
   async getUserById(@Param('id') id: number) {
     return await this._userService.getUserById(id);
   }
 
   @Delete(':id')
+  @Roles(RoleEnum.ADMIN)
   async deleteUser(@Param('id') id: number): Promise<any> {
     return await this._userService.deleteUser(id);
   }
 
   @Put(':id')
+  @Roles(RoleEnum.ADMIN)
   editUser(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
     return this._userService.updateUser(id, updateUserDto);
   }
