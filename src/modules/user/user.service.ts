@@ -8,7 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RoleService } from '../role/role.service';
 import * as bcrypt from 'bcrypt';
 import { PaginationResponseDto } from '../../common/dtos/pagination-response.dto';
-import { Prisma, User } from '../../../prisma/generated/prisma';
+import { Prisma, User } from '@prisma/client';
 import { UpdateUserDto } from './dtos/update-user.dto';
 
 @Injectable()
@@ -67,11 +67,7 @@ export class UserService {
   async createUser(
     createUser: CreateUserDto,
   ): Promise<{ success: boolean; user?: any; error?: string }> {
-    const role = await this._roleService.findFirstBy({
-      where: {
-        name: createUser.role,
-      },
-    });
+    const role = await this._roleService.findFirstBy(createUser.role);
 
     if (!role) {
       return { success: false, error: 'Role not found' };

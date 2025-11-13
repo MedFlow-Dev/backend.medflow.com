@@ -11,14 +11,17 @@ import {
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dtos/create-role.dto';
-import { Prisma } from 'prisma/generated/prisma';
+import { Prisma } from '@prisma/client';
 import { UpdateRoleDto } from './dtos/update-role.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RoleEnum } from '../../common/enums/role.enum';
 
 @Controller('role')
 export class RoleController {
   constructor(private readonly _roleService: RoleService) {}
 
   @Post()
+  @Roles(RoleEnum.ADMIN)
   async createRole(@Body() createRoleDto: CreateRoleDto) {
     return await this._roleService.createRole(
       createRoleDto as Prisma.RoleCreateInput,

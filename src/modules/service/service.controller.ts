@@ -8,16 +8,22 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dtos/create-service.dto';
 import { UpdateServiceDto } from './dtos/update-service.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { AuthGuard } from '@nestjs/passport';
+import { RoleEnum } from '../../common/enums/role.enum';
 
 @Controller('service')
+@UseGuards(AuthGuard('jwt'))
 export class ServiceController {
   constructor(private readonly _serviceService: ServiceService) {}
 
   @Post()
+  @Roles(RoleEnum.ADMIN )
   async createService(@Body() body: CreateServiceDto) {
     const result = await this._serviceService.createService(body);
 

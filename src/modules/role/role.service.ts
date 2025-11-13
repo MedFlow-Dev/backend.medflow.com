@@ -1,13 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { Prisma, Role } from 'prisma/generated/prisma';
+import { Prisma, Role } from '@prisma/client';
+import { RoleEnum } from 'src/common/enums/role.enum';
 
 @Injectable()
 export class RoleService {
   constructor(private _prismaService: PrismaService) {}
 
-  async findFirstBy(args: Prisma.RoleFindFirstArgs) {
-    return this._prismaService.role.findFirst(args);
+  async findFirstBy(name: RoleEnum) {
+    return await this._prismaService.role.findFirst({
+      where: {
+        name: name,
+      },
+    });
   }
 
   async getRoleByUniqueInput(

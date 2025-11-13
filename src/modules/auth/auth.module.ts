@@ -12,9 +12,11 @@ import { RoleModule } from '../role/role.module';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get('JWT_SECRET') || 'your-secret-key',
+        signOptions: {
+          expiresIn: configService.get('JWT_EXPIRES_IN') || '1d',
+        },
       }),
       inject: [ConfigService],
     }),

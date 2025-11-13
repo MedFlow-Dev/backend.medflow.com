@@ -5,7 +5,7 @@ import {
   IsEnum,
   IsOptional,
 } from 'class-validator';
-import { GenderEnum } from '../../../../prisma/generated/prisma';
+import { GenderEnum } from '@prisma/client';
 
 export class RegisterDto {
   @IsString()

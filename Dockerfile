@@ -12,13 +12,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy prisma schema
-COPY prisma ./prisma
-
-# Generate Prisma Client
-RUN npx prisma generate --schema=./prisma/schemas/schema.prisma
-
-# Copy application code
+# Copy the entire application
 COPY . .
 
 # Expose port

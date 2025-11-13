@@ -5,21 +5,20 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { RoleService } from '../role/role.service'; // Adjust path
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from './dtos/register.dto';
-import { User } from '../../../prisma/generated/prisma';
+import { RoleEnum } from 'src/common/enums/role.enum';
+import { LoginDto } from './dtos/login.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private roleService: RoleService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<User> {
-    const existingUser: User | null = await this.prisma.user.findUnique({
+  async register(registerDto: RegisterDto) {
+    const existingUser = await this.prisma.user.findUnique({
       where: { email: registerDto.email },
     });
 
@@ -27,13 +26,18 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    const role = await this.roleService.findFirstBy({
-      where: { name: 'PATIENT' },
-    });
-
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
 
-    return (await this.prisma.user.create({
+    // Find PATIENT role
+    const patientRole = await this.prisma.role.findFirst({
+      where: { name: RoleEnum.PATIENT },
+    });
+
+    if (!patientRole) {
+      throw new Error('Patient role not found. Please seed the database.');
+    }
+
+    const user = await this.prisma.user.create({
       data: {
         firstname: registerDto.firstname,
         lastname: registerDto.lastname,
@@ -43,34 +47,39 @@ export class AuthService {
         phone_number: registerDto.phone_number,
         picture: registerDto.picture,
         doctor_speciality: registerDto.doctor_speciality,
-        access_token: '', // Will be updated on login
-        role: {
-          connect: { id: role.id },
-        },
+        access_token: '',
+        role_id: patientRole.id,
       },
       select: {
         id: true,
         firstname: true,
         lastname: true,
         email: true,
-        gender: true,
-        phone_number: true,
-        picture: true,
-        doctor_speciality: true,
         role: {
           select: {
             id: true,
             name: true,
           },
         },
-        created_at: true,
       },
-    })) as User;
+    });
+
+    // Generate JWT token
+    const token = this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role.name,
+    });
+
+    return {
+      user,
+      access_token: token,
+    };
   }
 
-  async login(email: string, password: string) {
-    const user: User | null = await this.prisma.user.findUnique({
-      where: { email },
+  async login(loginDto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: loginDto.email },
       include: {
         role: true,
       },
@@ -80,48 +89,42 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
+    // Generate JWT token
+    const token = this.jwtService.sign({
       sub: user.id,
       email: user.email,
-      roleId: user.role_id,
-    };
-
-    const access_token = await this.jwtService.signAsync(payload);
-
-    // Update access_token in database
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { access_token },
+      role: user.role.name,
     });
 
     return {
-      access_token,
       user: {
         id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
-        gender: user.gender,
-        phone_number: user.phone_number,
-        picture: user.picture,
-        doctor_speciality: user.doctor_speciality,
-        roleId: user.role_id,
+        role: {
+          id: user.role.id,
+          name: user.role.name,
+        },
       },
+      access_token: token,
     };
   }
 
-  async validateUser(userId: number): Promise<User | null> {
-    return (await this.prisma.user.findUnique({
+
+
+  async validateUser(userId: number) {
+    return await this.prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        role: true,
-      },
       select: {
         id: true,
         firstname: true,
@@ -138,7 +141,7 @@ export class AuthService {
           },
         },
       },
-    })) as User | null;
+    });
   }
 
   async logout(userId: number) {

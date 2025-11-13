@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto } from './dtos/create-service.dto';
 import { PaginationResponseDto } from '../../common/dtos/pagination-response.dto';
-import { Prisma, Service } from '../../../prisma/generated/prisma';
+import { Prisma, Service } from '@prisma/client';
 import { UpdateServiceDto } from './dtos/update-service.dto';
 
 @Injectable()
@@ -16,6 +16,7 @@ export class ServiceService {
     skip: number,
     search?: string,
   ): Promise<PaginationResponseDto<Service>> {
+
     const where: Prisma.ServiceWhereInput = {
       ...(search && {
         OR: [
@@ -25,7 +26,7 @@ export class ServiceService {
       }),
     };
 
-    const total = await this.prisma.user.count({ where });
+    const total = await this.prisma.service.count({ where });
     const totalPages = Math.ceil(total / limit);
     const services: Service[] = await this.prisma.service.findMany({
       skip: skip,
@@ -62,7 +63,7 @@ export class ServiceService {
     const service = await this.prisma.service.create({
       data: {
         name: body.name,
-        price: body.price,
+        cost: body.cost,
         description: body.description,
       },
     });
@@ -88,7 +89,7 @@ export class ServiceService {
       where: { id },
       data: {
         name: updateService.name ?? serviceToUpdate.name,
-        price: updateService.price ?? serviceToUpdate.price,
+        cost: updateService.cost ?? serviceToUpdate.cost,
         description: updateService.description ?? serviceToUpdate.description,
       },
     });

@@ -1,26 +1,65 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { RoleEnum } from '../enums/role.enum';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Reflector } from '@nestjs/core';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+    // Check if route is public
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
-    if (!requiredRoles) {
+    if (isPublic) {
       return true;
     }
 
-    const { user } = context.switchToHttp().getRequest();
+    // Get required roles from decorator
+    const requiredRoles = this.reflector.getAllAndOverride<RoleEnum[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (!user) {
-      return false;
+    // If no roles are required, allow access
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
     }
 
-    return requiredRoles.some((role) => user.role === role);
+    // Get user from request
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    // User should already be validated by JwtAuthGuard
+    if (!user) {
+      throw new ForbiddenException('User not authenticated');
+    }
+
+    // Get user's role name (handle both object and string)
+    const userRole: RoleEnum = user.role?.name || user.role;
+
+    if (!userRole) {
+      throw new ForbiddenException('User has no role assigned');
+    }
+
+    // Check if user has any of the required roles
+    const hasRole = requiredRoles.includes(userRole);
+
+    if (!hasRole) {
+      throw new ForbiddenException(
+        `Access denied. Required role(s): ${requiredRoles.join(', ')}. Your role: ${userRole}`,
+      );
+    }
+
+    return true;
   }
 }
