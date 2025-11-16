@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -14,6 +15,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { UpdateUserDto } from './dtos/update-user.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleEnum } from '../../common/enums/role.enum';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('user')
 export class UserController {
@@ -34,19 +36,17 @@ export class UserController {
   @Get()
   @Roles(RoleEnum.ADMIN)
   async getAllUsers(
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
+    @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
     @Query('sortBy') sortBy = 'id',
-    @Query() search?: string,
-    @Query() roleId?: number,
+    @Query('search') search?: string,
+    @Query('role_id', new ParseIntPipe({ optional: true })) roleId?: number,
   ) {
-    const parsedPage = parseInt(page, 10);
-    const parsedLimit = parseInt(limit, 10);
-    const skip = (parsedPage - 1) * parsedLimit;
+    const skip = (page - 1) * limit;
 
     return await this._userService.getAllUsers(
-      parsedPage,
-      parsedLimit,
+      page,
+      limit,
       sortBy,
       skip,
       search,
@@ -56,19 +56,26 @@ export class UserController {
 
   @Roles(RoleEnum.ADMIN)
   @Get(':id')
-  async getUserById(@Param('id') id: number) {
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
     return await this._userService.getUserById(id);
   }
 
   @Delete(':id')
   @Roles(RoleEnum.ADMIN)
-  async deleteUser(@Param('id') id: number): Promise<any> {
+  async deleteUser(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return await this._userService.deleteUser(id);
   }
 
   @Put(':id')
-  @Roles(RoleEnum.ADMIN)
-  editUser(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto) {
+  async editUser(
+    @CurrentUser() currentUser: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    if (currentUser.id !== id) {
+      throw new BadRequestException('You are not authorized to edit this user');
+    }
+
     return this._userService.updateUser(id, updateUserDto);
   }
 }

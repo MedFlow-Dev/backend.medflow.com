@@ -8,7 +8,7 @@ export class RoleService {
   constructor(private _prismaService: PrismaService) {}
 
   async findFirstBy(name: RoleEnum) {
-    return await this._prismaService.role.findFirst({
+    return this._prismaService.role.findFirst({
       where: {
         name: name,
       },

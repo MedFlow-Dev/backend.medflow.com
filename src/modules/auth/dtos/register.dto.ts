@@ -6,6 +6,7 @@ import {
   IsOptional,
 } from 'class-validator';
 import { GenderEnum } from '@prisma/client';
+import { RoleEnum } from '../../../common/enums/role.enum';
 
 export class RegisterDto {
   @IsString()
@@ -39,5 +40,5 @@ export class RegisterDto {
   doctor_speciality?: string;
 
   @IsString()
-  role: string;
+  role: RoleEnum;
 }

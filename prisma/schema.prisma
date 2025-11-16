@@ -8,6 +8,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator fakeData {
+  provider = "prisma-generator-fake-data"
+  output   = "./generated.ts"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
