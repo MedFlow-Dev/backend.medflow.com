@@ -60,19 +60,21 @@ export class ClinicService {
     };
 
     const total = await this.prisma.clinic.count({ where });
-    const totalPages = Math.ceil(total / limit);
     const clinics: Clinic[] = await this.prisma.clinic.findMany({
       skip: skip,
       take: limit,
       where,
       orderBy: { [sortBy]: 'asc' },
+      include: {
+        services: true,
+      },
     });
 
     return {
       data: clinics,
       meta: {
         total,
-        totalPages,
+        totalPages: Math.ceil(total / limit),
         page,
       },
     };

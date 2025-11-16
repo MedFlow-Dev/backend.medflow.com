@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -39,18 +40,36 @@ export class ServiceController {
   @Get()
   @Roles(RoleEnum.ADMIN)
   async getAllServices(
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
+    @Query('page', new ParseIntPipe({ optional: true })) page = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
     @Query('sortBy') sortBy = 'id',
-    @Query() search?: string,
+    @Query('search') search?: string,
   ) {
-    const parsedPage = parseInt(page, 10);
-    const parsedLimit = parseInt(limit, 10);
-    const skip = (parsedPage - 1) * parsedLimit;
+    const skip = (page - 1) * limit;
 
     return await this._serviceService.getAllServices(
-      parsedPage,
-      parsedLimit,
+      page,
+      limit,
+      sortBy,
+      skip,
+      search,
+    );
+  }
+
+  @Get('by-clinic/:clinic_id')
+  async getAllServicesByClinic(
+    @Param('clinic_id', ParseIntPipe) clinicId: number,
+    @Query('page', new ParseIntPipe({ optional: true })) page = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
+    @Query('sortBy') sortBy = 'id',
+    @Query('search') search?: string,
+  ) {
+    const skip = (page - 1) * limit;
+
+    return this._serviceService.getAllServicesByClinic(
+      clinicId,
+      page,
+      limit,
       sortBy,
       skip,
       search,
@@ -59,22 +78,24 @@ export class ServiceController {
 
   @Get(':id')
   @Roles(RoleEnum.ADMIN)
-  async getServiceById(@Param('id') id: number) {
+  async getServiceById(@Param('id', ParseIntPipe) id: number) {
     return await this._serviceService.getServiceById(id);
   }
 
   @Put(':id')
   @Roles(RoleEnum.ADMIN)
-  async updateService(@Param('id') id: number, @Body() body: UpdateServiceDto) {
+  async updateService(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateServiceDto,
+  ) {
     return this._serviceService.updateService(id, body);
   }
 
   @Delete(':id')
   @Roles(RoleEnum.ADMIN)
-  async deleteService(@Param() id: number) {
+  async deleteService(@Param('id', ParseIntPipe) id: number) {
     return await this._serviceService.deleteService(id);
   }
-
 
   // TODO: Assign service to a clinic
   // TODO: Get all services assigned to a clinic

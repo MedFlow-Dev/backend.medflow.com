@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateServiceDto } from './dtos/create-service.dto';
 import { PaginationResponseDto } from '../../common/dtos/pagination-response.dto';
-import { Prisma, Service } from '@prisma/client';
+import { ClinicServices, Prisma, Service } from '@prisma/client';
 import { UpdateServiceDto } from './dtos/update-service.dto';
 
 @Injectable()
@@ -16,7 +16,6 @@ export class ServiceService {
     skip: number,
     search?: string,
   ): Promise<PaginationResponseDto<Service>> {
-
     const where: Prisma.ServiceWhereInput = {
       ...(search && {
         OR: [
@@ -85,7 +84,7 @@ export class ServiceService {
       throw new NotFoundException('Service not found');
     }
 
-    return await this.prisma.service.update({
+    return this.prisma.service.update({
       where: { id },
       data: {
         name: updateService.name ?? serviceToUpdate.name,
@@ -109,5 +108,67 @@ export class ServiceService {
     });
   }
 
-  assignServiceToAClinic() {}
+  async getAllServicesByClinic(
+    clinicId: number,
+    page: number,
+    limit: number,
+    sortBy: string,
+    skip: number,
+    search?: string,
+  ): Promise<PaginationResponseDto<ClinicServices>> {
+    const clinic = await this.prisma.clinic.findUnique({
+      where: { id: clinicId },
+    });
+
+    if (!clinic) {
+      throw new NotFoundException('Clinic not found');
+    }
+
+    const where: Prisma.ClinicServicesWhereInput = {
+      clinic_id: clinicId,
+      ...(search && {
+        OR: [
+          {
+            service: {
+              name: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+          },
+          {
+            service: {
+              description: {
+                contains: search,
+                mode: 'insensitive',
+              },
+            },
+          },
+        ],
+      }),
+    };
+
+    const [services, total] = await Promise.all([
+      this.prisma.clinicServices.findMany({
+        skip: skip,
+        take: limit,
+        where,
+        orderBy: { [sortBy]: 'asc' },
+        include: {
+          service: true,
+        },
+      }),
+      this.prisma.clinicServices.count({ where }),
+    ]);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: services,
+      meta: {
+        total,
+        totalPages,
+        page,
+      },
+    };
+  }
 }

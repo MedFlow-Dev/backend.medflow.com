@@ -28,18 +28,16 @@ export class ClinicController {
   @Get()
   @Roles(RoleEnum.ADMIN)
   async getAllClinics(
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
+    @Query('page', new ParseIntPipe({ optional: true })) page = 1,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit = 10,
     @Query('sortBy') sortBy = 'id',
     @Query('search') search?: string,
   ) {
-    const parsedPage = parseInt(page, 10);
-    const parsedLimit = parseInt(limit, 10);
-    const skip = (parsedPage - 1) * parsedLimit;
+    const skip = (page - 1) * limit;
 
     return await this._clinicService.getAllClinics(
-      parsedPage,
-      parsedLimit,
+      page,
+      limit,
       sortBy,
       skip,
       search,
