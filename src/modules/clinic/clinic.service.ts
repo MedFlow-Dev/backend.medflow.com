@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateClinicDto } from './dtos/create-clinic.dto';
 import { PaginationResponseDto } from '../../common/dtos/pagination-response.dto';
@@ -11,29 +15,35 @@ export class ClinicService {
   constructor(private prisma: PrismaService) {}
 
   async createClinic(createClinicDto: CreateClinicDto) {
+    console.log(createClinicDto);
     const clinic = await this.prisma.clinic.create({
       data: {
         name: createClinicDto.name,
         rooms_number: createClinicDto.rooms_number,
         users: {
-          connect: createClinicDto.users.map((userId) => ({ id: userId })),
+          connect:
+            createClinicDto.users?.map((userId) => ({ id: userId })) || [],
         },
         services: {
-          connect: createClinicDto.services.map((serviceId) => ({
-            id: serviceId,
-          })),
+          create:
+            createClinicDto.services?.map((serviceId) => ({
+              service: {
+                connect: { id: serviceId },
+              },
+            })) || [],
         },
         appointements: {
-          connect: createClinicDto.appointements.map((appointmentId) => ({
-            id: appointmentId,
-          })),
+          connect:
+            createClinicDto.appointements?.map((appointmentId) => ({
+              id: appointmentId,
+            })) || [],
         },
       },
     });
     if (!clinic) {
       return { success: false, error: 'Clinic not found' };
     }
-    return { success: true };
+    return { success: true, clinic: clinic };
   }
 
   async getAllClinics(
@@ -68,18 +78,46 @@ export class ClinicService {
     };
   }
 
-  async getClinicById(id: number): Promise<Clinic> {
+  async getClinicById(id: number): Promise<any> {
     const clinic = await this.prisma.clinic.findUnique({
       where: {
         id: id,
       },
+      select: {
+        id: true,
+        name: true,
+        rooms_number: true,
+        receptionist_id: true,
+        services: {
+          select: {
+            service: true,
+          },
+        },
+        users: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+            email: true,
+            picture: true,
+            role: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!clinic) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException('Clinic not found');
     }
 
-    return clinic;
+    return {
+      ...clinic,
+      services: clinic.services.map((cs) => cs.service),
+    };
   }
 
   async updateClinic(id: number, updateClinicDto: UpdateClinicDto) {
@@ -88,27 +126,35 @@ export class ClinicService {
     });
 
     if (!clinicToUpdate) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException(`Clinic with id: ${id} not found`);
     }
 
     return this.prisma.clinic.update({
       where: { id },
       data: {
-        name: updateClinicDto.name,
-        rooms_number: updateClinicDto.rooms_number,
-        users: {
-          connect: updateClinicDto.users.map((userId) => ({ id: userId })),
-        },
-        services: {
-          connect: updateClinicDto.services.map((serviceId) => ({
-            id: serviceId,
-          })),
-        },
-        appointements: {
-          connect: updateClinicDto.appointements.map((appointmentId) => ({
-            id: appointmentId,
-          })),
-        },
+        ...(updateClinicDto.name && { name: updateClinicDto.name }),
+        ...(updateClinicDto.rooms_number && {
+          rooms_number: updateClinicDto.rooms_number,
+        }),
+        ...(updateClinicDto.users?.length > 0 && {
+          users: {
+            connect: updateClinicDto.users.map((userId) => ({ id: userId })),
+          },
+        }),
+        ...(updateClinicDto.services?.length > 0 && {
+          services: {
+            connect: updateClinicDto.services.map((serviceId) => ({
+              id: serviceId,
+            })),
+          },
+        }),
+        ...(updateClinicDto.appointements?.length > 0 && {
+          appointements: {
+            connect: updateClinicDto.appointements.map((appointmentId) => ({
+              id: appointmentId,
+            })),
+          },
+        }),
       },
     });
   }
@@ -119,7 +165,7 @@ export class ClinicService {
     });
 
     if (!clinicToDelete) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException('Clinic not found');
     }
 
     return this.prisma.clinic.delete({ where: { id } });
@@ -131,7 +177,7 @@ export class ClinicService {
     });
 
     if (!doctor) {
-      throw new Error('Doctor not found');
+      throw new NotFoundException(`Doctor with id: ${doctorId} not found`);
     }
 
     const clinic = await this.prisma.clinic.findUnique({
@@ -139,7 +185,7 @@ export class ClinicService {
     });
 
     if (!clinic) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException(`Clinic with id: ${clinicId} not found`);
     }
 
     return this.prisma.clinic.update({
@@ -158,7 +204,7 @@ export class ClinicService {
     });
 
     if (!service) {
-      throw new Error('Service not found');
+      throw new NotFoundException('Service not found');
     }
 
     const clinic = await this.prisma.clinic.findUnique({
@@ -166,7 +212,7 @@ export class ClinicService {
     });
 
     if (!clinic) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException(`Clinic with id: ${clinicId} not found`);
     }
 
     return this.prisma.clinic.update({
@@ -179,13 +225,20 @@ export class ClinicService {
     });
   }
 
-  async assignReceptionToAClinic(clinicId: number, receptionId: number) {
+  async assignReceptionistToAClinic(clinicId: number, receptionId: number) {
     const receptionist = await this.prisma.user.findUnique({
       where: { id: receptionId, role: { name: RoleEnum.RECEPTIONIST } },
     });
 
     if (!receptionist) {
-      throw new Error('Receptionist not found');
+      console.log('wiw');
+      throw new NotFoundException('Receptionist not found');
+    }
+
+    if (receptionist.clinic_id) {
+      throw new BadRequestException(
+        'Receptionist already assigned to a clinic',
+      );
     }
 
     const clinic = await this.prisma.clinic.findUnique({
@@ -193,15 +246,13 @@ export class ClinicService {
     });
 
     if (!clinic) {
-      throw new Error('Clinic not found');
+      throw new NotFoundException('Clinic not found');
     }
 
     return this.prisma.clinic.update({
       where: { id: clinicId },
       data: {
-        users: {
-          connect: { id: receptionId },
-        },
+        receptionist_id: receptionId,
       },
     });
   }

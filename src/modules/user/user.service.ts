@@ -27,7 +27,7 @@ export class UserService {
     roleId?: number,
   ): Promise<PaginationResponseDto<User>> {
     const where: Prisma.UserWhereInput = {
-      ...(roleId && { roleId }),
+      ...(roleId && { role_id: roleId }),
       ...(search && {
         OR: [
           { email: { contains: search, mode: 'insensitive' } },
@@ -67,6 +67,9 @@ export class UserService {
   async createUser(
     createUser: CreateUserDto,
   ): Promise<{ success: boolean; user?: any; error?: string }> {
+    if (!createUser.role) {
+      return { success: false, error: 'Role not found' };
+    }
     const role = await this._roleService.findFirstBy(createUser.role);
 
     if (!role) {
@@ -92,18 +95,19 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<User> {
-    const user: User | null = await this.prisma.user.findUnique({
-      where: { id },
+    console.log(id);
+    const user = await this.prisma.user.findUnique({
+      where: { id: id },
       include: {
         role: {
           select: {
-            id: true,
             name: true,
           },
         },
       },
     });
 
+    console.log(user);
     if (!user) {
       throw new NotFoundException('User not found');
     }

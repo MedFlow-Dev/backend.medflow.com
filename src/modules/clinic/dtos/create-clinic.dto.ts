@@ -8,6 +8,7 @@ export class CreateClinicDto {
   @IsNumber()
   rooms_number: number;
   services: number[];
+  receptionist_id: number;
   appointements: number[];
   users: number[];
 }
